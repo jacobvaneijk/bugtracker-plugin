@@ -1,24 +1,24 @@
 <template>
     <div>
-        <div v-if="opened">
-            <template v-for="mask in masks">
-                <div class="mask" :style="{ width: mask.width + 'px', height: mask.height + 'px', top: mask.y + 'px', left: mask.x + 'px' }"></div>
-            </template>
-        </div>
+        <template v-if="opened" v-for="mask in masks">
+            <div class="mask" :style="{ width: mask.width + 'px', height: mask.height + 'px', top: mask.y + 'px', left: mask.x + 'px' }"></div>
+        </template>
 
         <div class="selection-container" v-if="opened" @mousedown="selectStart" @mousemove="selectMove" @mouseup="selectEnd"></div>
         <div class="selection" v-if="opened && selection.width > 0 && selection.height > 0" :style="{ width: selection.width + 'px', height: selection.height + 'px', top: selection.y + 'px', left: selection.x + 'px' }"></div>
 
         <EntryPoint @click="entryPointPressed" />
+        <ReportBug v-if="selected" :top="popover.top" :left="popover.left" :unresolved="unresolved" :screenshot="popover.screenshot" @cancel="selected = false" />
     </div>
 </template>
 
 <script>
 import html2canvas from 'html2canvas'
 import EntryPoint from './EntryPoint.vue'
+import ReportBug from './ReportBug.vue'
 
 export default {
-    components: { EntryPoint },
+    components: { EntryPoint, ReportBug },
     created: function () {
         for (let i = 0; i < 4; ++i) {
             this.masks.push({
@@ -40,9 +40,21 @@ export default {
                 x: 0,
                 y: 0,
             },
+            selected: false,
+            popover: {
+                screenshot: '',
+                top: 0,
+                left: 0,
+            },
             opened: false,
             masks: [],
         }
+    },
+    props: {
+        unresolved: {
+            required: true,
+            type: String,
+        },
     },
     methods: {
         getScreenCoordinates: function (event) {
@@ -56,6 +68,7 @@ export default {
             }
         },
         entryPointPressed: function () {
+            this.selected = false
             this.opened = !this.opened
 
             const height = window.innerHeight / 2
@@ -75,6 +88,7 @@ export default {
             }
 
             this.selecting = true
+            this.selected = false
             this.opened = true
 
             const coordinates = this.getScreenCoordinates(event)
@@ -139,14 +153,13 @@ export default {
             }
 
             this.selecting = false
+            this.selected = true
 
-            html2canvas(document.body, { logging: false, width: this.selection.width, height: this.selection.height, x: this.selection.x, y: this.selection.y, }).then(function (canvas) {
-                var a = document.createElement('a')
+            this.popover.top = this.selection.y + this.selection.height + 7
+            this.popover.left = (this.selection.x + (this.selection.width - 408) / 2)
 
-                a.href = canvas.toDataURL('image/jpeg').replace('image/jpeg', 'image/octet-stream')
-                a.download = 'somefilename.jpg'
-
-                a.click()
+            html2canvas(document.body, { logging: false, width: this.selection.width, height: this.selection.height, x: this.selection.x, y: this.selection.y, }).then((canvas) => {
+                this.popover.screenshot = canvas.toDataURL()
             })
         },
     },
@@ -154,6 +167,10 @@ export default {
 </script>
 
 <style scoped>
+* {
+    box-sizing: border-box;
+}
+
 .mask {
     position: absolute;
     z-index: 1000;

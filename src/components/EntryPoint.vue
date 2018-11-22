@@ -1,5 +1,5 @@
 <template>
-    <button class="bug-tracker-ignore" @click="$emit('click')">Bug tracker</button>
+    <button @click="$emit('click')">Bug tracker</button>
 </template>
 
 <script>
