@@ -1,25 +1,38 @@
 <template>
-    <div class="popover" :class="{ 'is-disabled': isLoading }" :style="{ top: top + 'px', left: left + 'px' }">
+    <div class="popover" :class="{ 'is-disabled': isLoading }" :style="{ top: settings.top + 'px', left: settings.left + 'px' }">
         <div class="popover__heading">
             <h1 class="popover__title">Fout rapporteren</h1>
             <p class="popover__intro">Vul hieronder een korte omschrijving, en eventueel een uitgebreidere beschrijving, van de fout in om deze te rapporteren aan The Cre8ion.Lab.</p>
         </div>
 
-        <div class="popover__body">
-            <div class="popover__field">
-                <label class="field__label is-required" for="title">Korte omschrijving</label>
-                <input class="field__control" type="text" id="title" v-model="fields.title" placeholder="Vul hier je korte omschrijving in…" :disabled="isLoading">
+        <div>
+            <div class="popover__body" v-if="!isSuccessful">
+                <div class="popover__field">
+                    <label class="field__label is-required" for="title">Korte omschrijving</label>
+                    <input class="field__control" type="text" id="title" v-model="fields.title" placeholder="Vul hier je korte omschrijving in…" :disabled="isLoading">
+                </div>
+
+                <div class="popover__field">
+                    <label class="field__label" for="description">Beschrijving</label>
+                    <textarea class="field__control" id="description" v-model="fields.description" placeholder="Vul hier je (eventuele) beschrijving in…" :disabled="isLoading"></textarea>
+                </div>
             </div>
 
-            <div class="popover__field">
-                <label class="field__label" for="description">Beschrijving</label>
-                <textarea class="field__control" id="description" v-model="fields.description" placeholder="Vul hier je (eventuele) beschrijving in…" :disabled="isLoading"></textarea>
+            <div class="popover__success" v-if="isSuccessful">
+                <i class="popover__tick"></i>
+                <p class="popover__message">De fout is succesvol gerapporteerd en zal zo snel mogelijk in behandeling worden genomen.</p>
             </div>
         </div>
 
         <div class="popover__actions">
-            <button class="popover__cancel" :disabled="isLoading" @click="$emit('cancel')">Annuleren</button>
-            <button class="popover__submit" :disabled="isLoading" @click="onSubmit">Rapporteren</button>
+            <div v-if="!isSuccessful">
+                <button class="popover__cancel" :disabled="isLoading" @click="$emit('cancel')">Annuleren</button>
+                <button class="popover__submit" :disabled="isLoading" @click="onSubmit">Rapporteren</button>
+            </div>
+
+            <div v-if="isSuccessful">
+                <button class="popover__cancel" @click="$emit('cancel')">Sluiten</button>
+            </div>
         </div>
     </div>
 </template>
@@ -27,16 +40,15 @@
 <script>
 import bowser from 'bowser'
 import axios from 'axios'
+import qs from 'qs'
 
 export default {
     props: {
-        screenshot: String,
-        unresolved: String,
-        left: Number,
-        top: Number,
+        settings: Object,
     },
     data: () => {
         return {
+            isSuccessful: false,
             isLoading: false,
             fields: {
                 description: '',
@@ -50,8 +62,12 @@ export default {
             this.isLoading = true
 
             const userAgent = bowser.getParser(window.navigator.userAgent).parsedResult
-            let description = this.fields.description
             const extra = []
+
+            const height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
+            const width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
+
+            let description = this.fields.description.trim()
 
             if (userAgent.browser.name) {
                 let browser = `**Browser:** ${userAgent.browser.name}`
@@ -93,22 +109,27 @@ export default {
                 extra.push(operatingSystem)
             }
 
+            extra.push(`**Browser size:** ${width}x${height}px`)
+
             if (description.length > 0 && extra.length > 0) {
                 description += '\n\n'
             }
 
-            description += extra.join('\n')
+            const data = {
+                description: description + extra.join('\n'),
+                screenshot: this.settings.screenshot.replace(/^data:image\/png;base64,/, ''),
+                title: this.fields.title,
+                list: this.settings.unresolved,
 
-            const data = new FormData()
+                height: height,
+                width: width,
+                x: this.settings.metadata.x,
+                y: this.settings.metadata.y,
+            }
 
-            data.set('title', this.fields.title)
-            data.set('description', description)
-            data.set('screenshot', this.screenshot)
-            data.set('list', this.unresolved)
-
-            axios.post('http://188.166.121.197:4321/bug', data, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+            axios.post('http://188.166.121.197:4321/bug', qs.stringify(data), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
                 .then((response) => {
-                    console.log(response)
+                    this.isSuccessful = true
                 })
                 .catch((error) => {
                     console.log(error)
@@ -305,16 +326,51 @@ $font-family: "Roboto", sans-serif;
                 }
             }
 
-    .popover__actions {
+    .popover__success {
         display: flex;
+        height: 109px + 32px * 2;
+        padding: 32px 16px;
+        flex-direction: column;
+        align-items: center;
+
+        .popover__tick {
+            display: block;
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAzMiAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0zMC4xMjUgMC42NjY2MjZMMTAuNzUgMjAuMjVMMS44NzUgMTEuNDE2NkwwIDEzLjMzMzNMMTAuNzUgMjRMMzIgMi41ODMyOUwzMC4xMjUgMC42NjY2MjZaIiBmaWxsPSJ3aGl0ZSIgZmlsbC1vcGFjaXR5PSIwLjc1Ii8+Cjwvc3ZnPgo=");
+            background-color: #6bcb3e;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .popover__message {
+            display: block;
+            margin: 0;
+            font-family: $font-family;
+            font-weight: 400;
+            font-size: 12px;
+            color: #333;
+            text-align: center;
+            line-height: (12px * 1.0 * 1.25);
+        }
+    }
+
+    .popover__actions {
         padding: 12px 16px;
         background-color: #f7f7f7;
         border-top: 1px solid #dedede;
         border-bottom-right-radius: 3px;
         border-bottom-left-radius: 3px;
-        justify-content: flex-end;
 
-        > button + button {
+        > div {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        button + button {
             margin-left: 16px;
         }
     }

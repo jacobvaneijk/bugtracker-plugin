@@ -30,6 +30,7 @@
   "dependencies": {
     "axios": "^0.18.0",
     "bowser": "^2.0.0-beta.3",
-    "html2canvas": "^1.0.0-alpha.12"
+    "html2canvas": "^1.0.0-alpha.12",
+    "qs": "^6.6.0"
   }
 }

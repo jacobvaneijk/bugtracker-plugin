@@ -4,21 +4,27 @@
             <div class="mask" :style="{ width: mask.width + 'px', height: mask.height + 'px', top: mask.y + 'px', left: mask.x + 'px' }"></div>
         </template>
 
+        <template v-for="bug in bugs">
+            <Bug :settings="bug" />
+        </template>
+
         <div class="selection-container" v-if="opened" @mousedown="selectStart" @mousemove="selectMove" @mouseup="selectEnd"></div>
         <div class="selection" v-if="opened && selection.width > 0 && selection.height > 0" :style="{ width: selection.width + 'px', height: selection.height + 'px', top: selection.y + 'px', left: selection.x + 'px' }"></div>
 
         <EntryPoint @click="entryPointPressed" />
-        <ReportBug v-if="selected" :top="popover.top" :left="popover.left" :unresolved="unresolved" :screenshot="popover.screenshot" @cancel="selected = false" />
+        <ReportBug v-if="selected" :settings="reportBug" @cancel="selected = false" />
     </div>
 </template>
 
 <script>
 import html2canvas from 'html2canvas'
+
 import EntryPoint from './EntryPoint.vue'
 import ReportBug from './ReportBug.vue'
+import Bug from './Bug.vue'
 
 export default {
-    components: { EntryPoint, ReportBug },
+    components: { EntryPoint, ReportBug, Bug },
     created: function () {
         for (let i = 0; i < 4; ++i) {
             this.masks.push({
@@ -40,14 +46,24 @@ export default {
                 x: 0,
                 y: 0,
             },
+            reportBug: {},
             selected: false,
-            popover: {
-                screenshot: '',
-                top: 0,
-                left: 0,
-            },
             opened: false,
             masks: [],
+            bugs: [
+                /*{
+                    x: 60,
+                    y: 30,
+                    width: 450,
+                    height: 1500,
+                },
+                {
+                    x: 438,
+                    y: 278,
+                    width: 1019,
+                    height: 964
+                },*/
+            ],
         }
     },
     props: {
@@ -71,7 +87,12 @@ export default {
             this.selected = false
             this.opened = !this.opened
 
-            const height = window.innerHeight / 2
+            const html = document.documentElement
+            const body = document.body
+
+            const documentHeight = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight)
+
+            const height = documentHeight / 2
             const width = window.innerWidth / 2
 
             for (let i = 0; i < this.masks.length; ++i) {
@@ -115,6 +136,11 @@ export default {
             this.selection.width = Math.abs(coordinates.x - this.selection.initialX)
             this.selection.height = Math.abs(coordinates.y - this.selection.initialY)
 
+            const html = document.documentElement
+            const body = document.body
+
+            const documentHeight = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight)
+
             // Top Mask
             this.masks[0] = {
                 width: parseInt(window.innerWidth),
@@ -134,7 +160,7 @@ export default {
             // Bottom Mask
             this.masks[2] = {
                 width: parseInt(window.innerWidth),
-                height: parseInt(window.innerHeight) - (this.selection.y + this.selection.height) + 2,
+                height: parseInt(documentHeight) - (this.selection.y + this.selection.height) + 2,
                 x: 0,
                 y: this.selection.y + this.selection.height - 2,
             };
@@ -155,11 +181,18 @@ export default {
             this.selecting = false
             this.selected = true
 
-            this.popover.top = this.selection.y + this.selection.height + 7
-            this.popover.left = (this.selection.x + (this.selection.width - 408) / 2)
+            this.reportBug = {
+                unresolved: this.unresolved,
+                metadata: {
+                    x: this.selection.x - 15,
+                    y: this.selection.y - 15,
+                },
+                left: this.selection.x + (this.selection.width - 408) / 2,
+                top: this.selection.y + this.selection.height + 7,
+            }
 
             html2canvas(document.body, { logging: false, width: this.selection.width, height: this.selection.height, x: this.selection.x, y: this.selection.y, }).then((canvas) => {
-                this.popover.screenshot = canvas.toDataURL()
+                this.reportBug.screenshot = canvas.toDataURL()
             })
         },
     },
