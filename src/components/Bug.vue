@@ -18,6 +18,10 @@ export default {
 </script>
 
 <style lang="sass">
+* {
+    box-sizing: border-box;
+}
+
 .container {
     position: absolute;
     top: 0;

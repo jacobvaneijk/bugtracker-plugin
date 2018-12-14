@@ -8,6 +8,10 @@ export default {
 </script>
 
 <style lang="sass" scoped>
+* {
+    box-sizing: border-box;
+}
+
 button {
     position: fixed;
     right: 25px;
