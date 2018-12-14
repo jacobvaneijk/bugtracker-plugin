@@ -130,6 +130,18 @@ export default {
             axios.post('http://188.166.121.197:4321/bug', qs.stringify(data), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
                 .then((response) => {
                     this.isSuccessful = true
+
+                    const existingBugs = JSON.parse(window.localStorage.getItem('bugs') || '[]')
+
+                    existingBugs.push({
+                        height: height,
+                        width: width,
+                        id: response.data.id,
+                        x: this.settings.metadata.x,
+                        y: this.settings.metadata.y,
+                    })
+
+                    window.localStorage.setItem('bugs', JSON.stringify(existingBugs))
                 })
                 .catch((error) => {
                     console.log(error)
