@@ -4,9 +4,9 @@
             <div class="mask" :style="{ width: mask.width + 'px', height: mask.height + 'px', top: mask.y + 'px', left: mask.x + 'px' }"></div>
         </template>
 
-        <template v-for="bug in bugs" v-if="!opened">
+        <template v-for="bug in bugs">
             <transition name="fade">
-                <Bug :settings="bug" />
+                <Bug :settings="bug" v-if="!opened" />
             </transition>
         </template>
 
@@ -207,6 +207,7 @@ export default {
 
             this.selecting = false
             this.selected = true
+            this.opened = true
 
             this.reportBug = {
                 unresolved: this.unresolved,
@@ -218,7 +219,7 @@ export default {
                 top: this.selection.y + this.selection.height + 7,
             }
 
-            html2canvas(document.body, { logging: false, width: this.selection.width, height: this.selection.height, x: this.selection.x, y: this.selection.y, }).then((canvas) => {
+            html2canvas(document.body, { imageTimeout: 0, logging: false, width: this.selection.width, height: this.selection.height, x: this.selection.x, y: this.selection.y, }).then((canvas) => {
                 this.reportBug.screenshot = canvas.toDataURL()
             })
         },
@@ -227,6 +228,8 @@ export default {
 </script>
 
 <style lang="sass" scoped>
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,500,600');
+
 * {
     box-sizing: border-box;
 }

@@ -1,48 +1,49 @@
 <template>
-    <div class="popover" :class="{ 'is-disabled': isLoading }" :style="{ top: settings.top + 'px', left: settings.left + 'px' }">
-        <div class="popover__heading">
+    <Popover :x="settings.left" :y="settings.top" :loading="isLoading">
+        <template slot="heading">
             <h1 class="popover__title">Fout rapporteren</h1>
             <p class="popover__intro">Vul hieronder een korte omschrijving, en eventueel een uitgebreidere beschrijving, van de fout in om deze te rapporteren aan The Cre8ion.Lab.</p>
-        </div>
+        </template>
 
-        <div>
-            <div class="popover__body" v-if="!isSuccessful">
-                <div class="popover__field">
-                    <label class="field__label is-required" for="title">Korte omschrijving</label>
-                    <input class="field__control" type="text" id="title" v-model="fields.title" placeholder="Vul hier je korte omschrijving in…" :disabled="isLoading">
-                </div>
-
-                <div class="popover__field">
-                    <label class="field__label" for="description">Beschrijving</label>
-                    <textarea class="field__control" id="description" v-model="fields.description" placeholder="Vul hier je (eventuele) beschrijving in…" :disabled="isLoading"></textarea>
-                </div>
+        <div class="popover__form" v-if="!isSuccessful">
+            <div class="popover__field">
+                <label class="field__label is-required" for="title" :class="{ 'is-disabled': isLoading }">Korte omschrijving</label>
+                <input class="field__control" type="text" id="title" v-model.trim="fields.title" placeholder="Vul hier je korte omschrijving in…" :disabled="isLoading">
             </div>
 
-            <div class="popover__success" v-if="isSuccessful">
-                <i class="popover__tick"></i>
-                <p class="popover__message">De fout is succesvol gerapporteerd en zal zo snel mogelijk in behandeling worden genomen.</p>
+            <div class="popover__field">
+                <label class="field__label" for="description" :class="{ 'is-disabled': isLoading }">Beschrijving</label>
+                <textarea class="field__control" id="description" v-model.trim="fields.description" placeholder="Vul hier je (eventuele) beschrijving in…" :disabled="isLoading"></textarea>
             </div>
         </div>
 
-        <div class="popover__actions">
+        <div class="popover__success" v-if="isSuccessful">
+            <i class="popover__tick"></i>
+            <p class="popover__message">De fout is succesvol gerapporteerd en zal zo snel mogelijk in behandeling worden genomen.</p>
+        </div>
+
+        <template slot="actions">
             <div v-if="!isSuccessful">
-                <button class="popover__cancel" :disabled="isLoading" @click="$emit('cancel')">Annuleren</button>
-                <button class="popover__submit" :disabled="isLoading" @click="onSubmit">Rapporteren</button>
+                <button class="popover__button-secondary" :disabled="isLoading" @click="$emit('cancel')">Annuleren</button>
+                <button class="popover__button-primary" :disabled="isLoading" @click="onSubmit">Rapporteren</button>
             </div>
 
             <div v-if="isSuccessful">
-                <button class="popover__cancel" @click="$emit('cancel')">Sluiten</button>
+                <button class="popover__button-secondary" @click="$emit('cancel')">Sluiten</button>
             </div>
-        </div>
-    </div>
+        </template>
+    </Popover>
 </template>
 
 <script>
+import Popover from './Popover.vue'
+
 import bowser from 'bowser'
 import axios from 'axios'
 import qs from 'qs'
 
 export default {
+    components: { Popover },
     props: {
         settings: Object,
     },
@@ -67,7 +68,7 @@ export default {
             const height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0)
             const width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
 
-            let description = this.fields.description.trim()
+            let description = this.fields.description
 
             if (userAgent.browser.name) {
                 let browser = `**Browser:** ${userAgent.browser.name}`
@@ -127,13 +128,16 @@ export default {
                 y: this.settings.metadata.y,
             }
 
-            axios.post('http://188.166.121.197:4321/bug', qs.stringify(data), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+            // TODO: Extract this URL to another place.
+            axios.post('http://188.166.121.197:4321/bugs', qs.stringify(data), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
                 .then((response) => {
                     this.isSuccessful = true
 
                     const existingBugs = JSON.parse(window.localStorage.getItem('bugs') || '[]')
 
                     existingBugs.push({
+                        title: this.fields.title,
+                        description: this.fields.description,
                         height: height,
                         width: width,
                         id: response.data.id,
@@ -155,74 +159,13 @@ export default {
 </script>
 
 <style lang="sass" scoped>
-@import url('https://fonts.googleapis.com/css?family=Roboto:400,500,600');
-
 $font-family: "Roboto", sans-serif;
 
-* {
-    box-sizing: border-box;
-}
-
 .popover {
-    position: absolute;
-    z-index: 5000;
-    width: 408px;
-    font-family: $font-family;
-    background-color: #fff;
-    box-shadow: 0 4px 15px rgba(#000, .15);
-    border-radius: 3px;
-}
-
-    .popover__heading {
-        position: relative;
+    .popover__form {
         padding: 16px;
-        background-color: #f7f7f7;
-        border-bottom: 1px solid #dedede;
-        border-top-right-radius: 3px;
-        border-top-left-radius: 3px;
-
-        &::after {
-            position: absolute;
-            top: -5.2px;
-            left: 50%;
-            z-index: 5200;
-            width: 12px;
-            height: 6px;
-            background-repeat: no-repeat;
-            background-image: url("data:image/svg+xml,%3C%3Fxml version='1.0' encoding='UTF-8'%3F%3E%3Csvg version='1.1' viewBox='0 0 12 7' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m11.5 6.3334h-11.5c0.31476 0 0.61115-0.14819 0.8-0.4l4.15-5.5333c0.33137-0.44183 0.95817-0.53137 1.4-0.2 0.075806 0.056854 0.14315 0.12419 0.2 0.2l4.15 5.5333c0.18885 0.25181 0.48524 0.4 0.8 0.4z' fill='%23f7f7f7'/%3E%3C/svg%3E%0A");
-            content: "";
-            transform: translateX(-50%);
-        }
-    }
-
-        .popover__title {
-            margin: 0 0 8px;
-            font-family: $font-family;
-            font-weight: 400;
-            font-size: 16px;
-            color: #444;
-            line-height: (16px * 1.0 * 1.2);
-        }
-
-        .popover__intro {
-            margin: 0;
-            font-family: $font-family;
-            font-weight: 400;
-            font-size: 12px;
-            color: #777;
-            line-height: (12px * 1.1 * 1.2);
-        }
-
-    .popover__body {
-        padding: 16px;
-    }
 
         .popover__field {
-            & + .popover__field {
-                margin-top: 16px;
-            }
-        }
-
             .field__label {
                 display: block;
                 margin: 0 0 4px;
@@ -250,7 +193,7 @@ $font-family: "Roboto", sans-serif;
                     }
                 }
 
-                .is-disabled & {
+                &.is-disabled {
                     opacity: .5;
                 }
             }
@@ -297,7 +240,7 @@ $font-family: "Roboto", sans-serif;
                     }
                 }
 
-                .is-disabled & {
+                &[disabled] {
                     background-color: rgba(#000, .05);
                     opacity: .5;
 
@@ -315,10 +258,10 @@ $font-family: "Roboto", sans-serif;
                 }
             }
 
-                textarea.field__control {
-                    height: 60px;
-                    resize: none;
-                }
+            textarea.field__control {
+                height: 60px;
+                resize: none;
+            }
 
             .field__message {
                 display: block;
@@ -337,6 +280,12 @@ $font-family: "Roboto", sans-serif;
                     color: #ff4c43;
                 }
             }
+
+            & + .popover__field {
+                margin-top: 16px;
+            }
+        }
+    }
 
     .popover__success {
         display: flex;
@@ -369,104 +318,5 @@ $font-family: "Roboto", sans-serif;
             line-height: (12px * 1.0 * 1.25);
         }
     }
-
-    .popover__actions {
-        padding: 12px 16px;
-        background-color: #f7f7f7;
-        border-top: 1px solid #dedede;
-        border-bottom-right-radius: 3px;
-        border-bottom-left-radius: 3px;
-
-        > div {
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        button + button {
-            margin-left: 16px;
-        }
-    }
-
-        .popover__cancel {
-            position: relative;
-            display: block;
-            margin: 0;
-            padding: 8px 0;
-            font-family: $font-family;
-            font-weight: 500;
-            font-size: 12px;
-            color: #999;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            line-height: (12px * 1.0 * 1.2);
-            background-color: transparent;
-            border: 0;
-            cursor: pointer;
-            transition: color ease-in-out .1s, opacity ease-in-out .1s;
-
-            &::after {
-                position: absolute;
-                bottom: 6px;
-                left: 0;
-                width: 0;
-                height: 1px;
-                background-color: #777;
-                content: "";
-                transition: width ease-in-out .2s;
-            }
-
-            &:hover {
-                color: #777;
-
-                &::after {
-                    width: 100%;
-                }
-            }
-
-            .is-disabled & {
-                opacity: .5;
-                cursor: not-allowed;
-
-                &:hover {
-                    color: #999;
-
-                    &::after {
-                        width: 0;
-                    }
-                }
-            }
-        }
-
-        .popover__submit {
-            display: block;
-            margin: 0;
-            padding: 8px 16px;
-            font-family: $font-family;
-            font-weight: 500;
-            font-size: 12px;
-            color: #fff;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            line-height: (12px * 1.0 * 1.2);
-            background-color: #ff4c43;
-            border-radius: 3px;
-            border: 0;
-            cursor: pointer;
-            transition: background-color ease-in-out .1s, box-shadow ease-in-out .1s, opacity ease-in-out .1s;
-
-            &:hover {
-                background-color: #e5443c;
-                box-shadow: 0 2px 5px rgba(#000, .15);
-            }
-
-            .is-disabled & {
-                opacity: .5;
-                cursor: not-allowed;
-
-                &:hover {
-                    background-color: #ff4c43;
-                    box-shadow: none;
-                }
-            }
-        }
+}
 </style>
