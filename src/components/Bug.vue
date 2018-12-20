@@ -5,21 +5,21 @@
         </div>
 
         <Popover :x="popover.x" :y="popover.y" v-if="isOpened" @closePopover="isOpened = false">
-            <div class="popover__body">
-                <h2 class="popover__title">{{ settings.title }}</h2>
+            <div class="bt-popover-body">
+                <h2 class="bt-popover-title">{{ settings.title }}</h2>
 
-                <p class="popover__description" v-if="settings.description">{{ settings.description }}</p>
-                <p class="popover__no-description" v-else>Geen beschrijving</p>
+                <p class="bt-popover-description" v-if="settings.description">{{ settings.description }}</p>
+                <p class="bt-popover-description bt-empty" v-else>Geen beschrijving</p>
 
-                <div class="popover__status">
-                    <span class="popover__label">Status</span>
-                    <span class="popover__value">In behandeling</span>
+                <div class="bt-popover-status">
+                    <span class="bt-popover-label">Status</span>
+                    <span class="bt-popover-value">In behandeling</span>
                 </div>
             </div>
 
             <template slot="actions">
                 <div>
-                    <a class="popover__button-secondary" :href="trelloUrl" target="_blank">Bekijk voortgang</a>
+                    <a class="bt-popover-button-secondary" :href="trelloUrl" target="_blank">Bekijk voortgang</a>
                 </div>
             </template>
         </Popover>
@@ -88,13 +88,11 @@ $font-family: "Roboto", sans-serif;
     }
 }
 
-.popover {
-    pointer-events: auto;
-
-    .popover__body {
+.bt-popover {
+    .bt-popover-body {
         padding: 16px;
 
-        .popover__title {
+        .bt-popover-title {
             display: block;
             margin: 0 0 12px;
             font-family: $font-family;
@@ -104,7 +102,7 @@ $font-family: "Roboto", sans-serif;
             line-height: (14px * 1.0 * 1.0);
         }
 
-        .popover__description {
+        .bt-popover-description {
             display: block;
             margin: 0 0 16px;
             font-family: $font-family;
@@ -112,21 +110,15 @@ $font-family: "Roboto", sans-serif;
             font-size: 12px;
             color: #333;
             line-height: (12px * 1.0 * 1.2);
+
+            &.bt-empty {
+                font-style: italic;
+                color: #999;
+            }
         }
 
-        .popover__no-description {
-            display: block;
-            margin: 0 0 16px;
-            font-family: $font-family;
-            font-weight: 400;
-            font-style: italic;
-            font-size: 12px;
-            color: #999;
-            line-height: (12px * 1.0 * 1.2);
-        }
-
-        .popover__status {
-            .popover__label {
+        .bt-popover-status {
+            .bt-popover-label {
                 display: block;
                 margin: 0 0 4px;
                 font-family: $font-family;
@@ -138,7 +130,7 @@ $font-family: "Roboto", sans-serif;
                 line-height: (10px * 1.0 * 1.0);
             }
 
-            .popover__value {
+            .bt-popover-value {
                 display: block;
                 margin: 0;
                 font-family: $font-family;

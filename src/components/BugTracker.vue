@@ -1,7 +1,7 @@
 <template>
     <div>
         <template v-if="opened" v-for="mask in masks">
-            <div class="mask" :style="{ width: mask.width + 'px', height: mask.height + 'px', top: mask.y + 'px', left: mask.x + 'px' }"></div>
+            <div class="bt-mask" :style="{ width: mask.width + 'px', height: mask.height + 'px', top: mask.y + 'px', left: mask.x + 'px' }"></div>
         </template>
 
         <template v-for="bug in bugs">
@@ -10,8 +10,8 @@
             </transition>
         </template>
 
-        <div class="selection-container" v-if="opened" @mousedown="selectStart" @mousemove="selectMove" @mouseup="selectEnd" @click="cancelReport"></div>
-        <div class="selection" v-if="opened && selection.width > 0 && selection.height > 0" :style="{ width: selection.width + 'px', height: selection.height + 'px', top: selection.y + 'px', left: selection.x + 'px' }" @click="cancelReport"></div>
+        <div class="bt-selection-container" v-if="opened" @mousedown="selectStart" @mousemove="selectMove" @mouseup="selectEnd" @click="cancelReport"></div>
+        <div class="bt-selection" v-if="opened && selection.width > 0 && selection.height > 0" :style="{ width: selection.width + 'px', height: selection.height + 'px', top: selection.y + 'px', left: selection.x + 'px' }" @click="cancelReport"></div>
 
         <transition name="fade">
             <EntryPoint @click="entryPointPressed" v-if="!opened" />
@@ -234,13 +234,13 @@ export default {
     box-sizing: border-box;
 }
 
-.mask {
+.bt-mask {
     position: absolute;
     z-index: 1000;
     background-color: rgba(0, 0, 0, .5);
 }
 
-.selection-container {
+.bt-selection-container {
     position: absolute;
     top: 0;
     left: 0;
@@ -249,7 +249,7 @@ export default {
     height: 100%;
 }
 
-.selection {
+.bt-selection {
     position: absolute;
     top: 0;
     left: 0;

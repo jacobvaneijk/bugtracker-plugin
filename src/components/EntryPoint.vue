@@ -1,18 +1,13 @@
 <template>
-    <button @click="$emit('click')">Bug tracker</button>
+    <button class="bt-entry-point" @click="$emit('click')">Bug tracker</button>
 </template>
-
-<script>
-export default {
-}
-</script>
 
 <style lang="sass" scoped>
 * {
     box-sizing: border-box;
 }
 
-button {
+.bt-entry-point {
     position: fixed;
     right: 25px;
     bottom: 25px;

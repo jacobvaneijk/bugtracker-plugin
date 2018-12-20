@@ -1,35 +1,35 @@
 <template>
     <Popover :x="settings.left" :y="settings.top" :loading="isLoading">
         <template slot="heading">
-            <h1 class="popover__title">Fout rapporteren</h1>
-            <p class="popover__intro">Vul hieronder een korte omschrijving, en eventueel een uitgebreidere beschrijving, van de fout in om deze te rapporteren aan The Cre8ion.Lab.</p>
+            <h1 class="bt-popover-title">Fout rapporteren</h1>
+            <p class="bt-popover-intro">Vul hieronder een korte omschrijving, en eventueel een uitgebreidere beschrijving, van de fout in om deze te rapporteren aan The Cre8ion.Lab.</p>
         </template>
 
-        <div class="popover__form" v-if="!isSuccessful">
-            <div class="popover__field">
-                <label class="field__label is-required" for="title" :class="{ 'is-disabled': isLoading }">Korte omschrijving</label>
-                <input class="field__control" type="text" id="title" v-model.trim="fields.title" placeholder="Vul hier je korte omschrijving in…" :disabled="isLoading">
+        <div class="bt-popover-form" v-if="!isSuccessful">
+            <div class="bt-popover-field">
+                <label class="bt-field-label bt-is-required" for="title" :class="{ 'bt-is-disabled': isLoading }">Korte omschrijving</label>
+                <input class="bt-field-control" type="text" id="title" v-model.trim="fields.title" placeholder="Vul hier je korte omschrijving in…" :disabled="isLoading">
             </div>
 
-            <div class="popover__field">
-                <label class="field__label" for="description" :class="{ 'is-disabled': isLoading }">Beschrijving</label>
-                <textarea class="field__control" id="description" v-model.trim="fields.description" placeholder="Vul hier je (eventuele) beschrijving in…" :disabled="isLoading"></textarea>
+            <div class="bt-popover-field">
+                <label class="bt-field-label" for="description" :class="{ 'bt-is-disabled': isLoading }">Beschrijving</label>
+                <textarea class="bt-field-control" id="description" v-model.trim="fields.description" placeholder="Vul hier je (eventuele) beschrijving in…" :disabled="isLoading"></textarea>
             </div>
         </div>
 
-        <div class="popover__success" v-if="isSuccessful">
-            <i class="popover__tick"></i>
-            <p class="popover__message">De fout is succesvol gerapporteerd en zal zo snel mogelijk in behandeling worden genomen.</p>
+        <div class="bt-popover-success" v-if="isSuccessful">
+            <i class="bt-popover-tick"></i>
+            <p class="bt-popover-message">De fout is succesvol gerapporteerd en zal zo snel mogelijk in behandeling worden genomen.</p>
         </div>
 
         <template slot="actions">
             <div v-if="!isSuccessful">
-                <button class="popover__button-secondary" :disabled="isLoading" @click="$emit('cancel')">Annuleren</button>
-                <button class="popover__button-primary" :disabled="isLoading" @click="onSubmit">Rapporteren</button>
+                <button class="bt-popover-button-secondary" :disabled="isLoading" @click="$emit('cancel')">Annuleren</button>
+                <button class="bt-popover-button-primary" :disabled="isLoading" @click="onSubmit">Rapporteren</button>
             </div>
 
             <div v-if="isSuccessful">
-                <button class="popover__button-secondary" @click="$emit('cancel')">Sluiten</button>
+                <button class="bt-popover-button-secondary" @click="$emit('cancel')">Sluiten</button>
             </div>
         </template>
     </Popover>
@@ -161,12 +161,12 @@ export default {
 <style lang="sass" scoped>
 $font-family: "Roboto", sans-serif;
 
-.popover {
-    .popover__form {
+.bt-popover {
+    .bt-popover-form {
         padding: 16px;
 
-        .popover__field {
-            .field__label {
+        .bt-popover-field {
+            .bt-field-label {
                 display: block;
                 margin: 0 0 4px;
                 padding: 0;
@@ -179,7 +179,7 @@ $font-family: "Roboto", sans-serif;
                 line-height: (10px * 1.0 * 1.2);
                 transition: opacity ease-in-out .1s;
 
-                &.is-required {
+                &.bt-is-required {
                     &::after {
                         margin-left: 4px;
                         font-family: $font-family;
@@ -193,12 +193,12 @@ $font-family: "Roboto", sans-serif;
                     }
                 }
 
-                &.is-disabled {
+                &.bt-is-disabled {
                     opacity: .5;
                 }
             }
 
-            .field__control {
+            .bt-field-control {
                 display: block;
                 width: 100%;
                 margin: 0;
@@ -249,7 +249,7 @@ $font-family: "Roboto", sans-serif;
                     }
                 }
 
-                .has-error & {
+                .bt-has-error & {
                     border-color: #ff4c43;
 
                     &:hover {
@@ -258,12 +258,12 @@ $font-family: "Roboto", sans-serif;
                 }
             }
 
-            textarea.field__control {
+            textarea.bt-field-control {
                 height: 60px;
                 resize: none;
             }
 
-            .field__message {
+            .bt-field-message {
                 display: block;
                 font-family: $font-family;
                 font-weight: 400;
@@ -281,20 +281,20 @@ $font-family: "Roboto", sans-serif;
                 }
             }
 
-            & + .popover__field {
+            & + .bt-popover-field {
                 margin-top: 16px;
             }
         }
     }
 
-    .popover__success {
+    .bt-popover-success {
         display: flex;
         height: 109px + 32px * 2;
         padding: 32px 16px;
         flex-direction: column;
         align-items: center;
 
-        .popover__tick {
+        .bt-popover-tick {
             display: block;
             width: 64px;
             height: 64px;
@@ -307,7 +307,7 @@ $font-family: "Roboto", sans-serif;
             flex-shrink: 0;
         }
 
-        .popover__message {
+        .bt-popover-message {
             display: block;
             margin: 0;
             font-family: $font-family;
