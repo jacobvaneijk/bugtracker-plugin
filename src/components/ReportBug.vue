@@ -141,24 +141,9 @@ export default {
                 dot_y: this.settings.selection.top - (30 / 2),
             }
 
-            // TODO: Extract this URL to another place.
-            axios.post('http://188.166.121.197:4321/bugs', qs.stringify(data), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+            axios.post('bugs', qs.stringify(data))
                 .then((response) => {
                     this.flags.isSuccessful = true
-
-                    /*const existingBugs = JSON.parse(window.localStorage.getItem('bugs') || '[]')
-
-                    existingBugs.push({
-                        title: this.fields.title,
-                        description: this.fields.description,
-                        height: height,
-                        width: width,
-                        id: response.data.id,
-                        x: this.settings.metadata.x,
-                        y: this.settings.metadata.y,
-                    })
-
-                    window.localStorage.setItem('bugs', JSON.stringify(existingBugs))*/
                 })
                 .catch((error) => {
                     console.log(error)

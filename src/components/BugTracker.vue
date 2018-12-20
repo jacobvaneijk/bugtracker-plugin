@@ -16,6 +16,7 @@
     <div v-else>
         <Bug
             :settings="bug"
+            :key="bug.title"
 
             v-for="bug in bugs"
         />
