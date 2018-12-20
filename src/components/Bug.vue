@@ -1,10 +1,17 @@
 <template>
     <div>
-        <div class="bt-bug-wrapper" :style="{ width: settings.width + 'px', height: settings.height + 'px' }" data-html2canvas-ignore>
-            <div class="bt-bug" :class="{ 'is-active': isOpened }" :style="{ top: settings.y + 'px', left: settings.x + 'px' }" @click="isOpened = !isOpened"></div>
+        <div class="bt-bug-wrapper" :style="style.wrapper">
+            <div
+                class="bt-bug"
+
+                :class="{ 'is-active': isOpened }"
+                :style="style.bug"
+
+                @click="isOpened = !isOpened"
+            />
         </div>
 
-        <Popover :x="popover.x" :y="popover.y" v-if="isOpened" @closePopover="isOpened = false">
+        <Popover :settings="popover" @close="isOpened = false" v-if="isOpened">
             <div class="bt-popover-body">
                 <h2 class="bt-popover-title">{{ settings.title }}</h2>
 
@@ -18,9 +25,7 @@
             </div>
 
             <template slot="actions">
-                <div>
-                    <a class="bt-popover-button-secondary" :href="trelloUrl" target="_blank">Bekijk voortgang</a>
-                </div>
+                <a class="bt-popover-button-secondary" :href="trelloUrl" target="_blank">Bekijk voortgang</a>
             </template>
         </Popover>
     </div>
@@ -37,15 +42,29 @@ export default {
         },
         popover: function () {
             return {
-                x: this.settings.x + (30 - 408) / 2,
-                y: this.settings.y + 30 + 7,
+                position: {
+                    top: this.settings.top + 30 + 7,
+                    left: this.settings.left + ((30 - 408) / 2),
+                },
+            }
+        },
+        style: function () {
+            return {
+                wrapper: {
+                    width: `${this.settings.width}px`,
+                    height: `${this.settings.height}px`,
+                },
+                bug: {
+                    top: `${this.settings.top}px`,
+                    left: `${this.settings.left}px`,
+                },
             }
         },
     },
     props: {
         settings: Object,
     },
-    data: () => {
+    data: function () {
         return {
             isOpened: false,
         }

@@ -1,42 +1,38 @@
 <template>
-    <Popover :x="settings.left" :y="settings.top" :loading="isLoading">
+    <Popover :settings="popover" @close="$emit('cancel')">
         <template slot="heading">
             <h1 class="bt-popover-title">Fout rapporteren</h1>
             <p class="bt-popover-intro">Vul hieronder een korte omschrijving, en eventueel een uitgebreidere beschrijving, van de fout in om deze te rapporteren aan The Cre8ion.Lab.</p>
         </template>
 
-        <div class="bt-popover-form" v-if="!isSuccessful">
+        <div class="bt-popover-form" v-if="!flags.isSuccessful">
             <div class="bt-popover-field">
-                <label class="bt-field-label bt-is-required" for="title" :class="{ 'bt-is-disabled': isLoading }">Korte omschrijving</label>
-                <input class="bt-field-control" type="text" id="title" v-model.trim="fields.title" placeholder="Vul hier je korte omschrijving in…" :disabled="isLoading">
+                <label class="bt-field-label bt-is-required" for="title" :class="{ 'bt-is-disabled': flags.isLoading }">Korte omschrijving</label>
+                <input class="bt-field-control" type="text" id="title" v-model.trim="fields.title" placeholder="Vul hier je korte omschrijving in…" :disabled="flags.isLoading">
             </div>
 
             <div class="bt-popover-field">
-                <label class="bt-field-label" for="description" :class="{ 'bt-is-disabled': isLoading }">Beschrijving</label>
-                <textarea class="bt-field-control" id="description" v-model.trim="fields.description" placeholder="Vul hier je (eventuele) beschrijving in…" :disabled="isLoading"></textarea>
+                <label class="bt-field-label" for="description" :class="{ 'bt-is-disabled': flags.isLoading }">Beschrijving</label>
+                <textarea class="bt-field-control" id="description" v-model.trim="fields.description" placeholder="Vul hier je (eventuele) beschrijving in…" :disabled="flags.isLoading"></textarea>
             </div>
         </div>
 
-        <div class="bt-popover-success" v-if="isSuccessful">
+        <div class="bt-popover-success" v-else>
             <i class="bt-popover-tick"></i>
             <p class="bt-popover-message">De fout is succesvol gerapporteerd en zal zo snel mogelijk in behandeling worden genomen.</p>
         </div>
 
         <template slot="actions">
-            <div v-if="!isSuccessful">
-                <button class="bt-popover-button-secondary" :disabled="isLoading" @click="$emit('cancel')">Annuleren</button>
-                <button class="bt-popover-button-primary" :disabled="isLoading" @click="onSubmit">Rapporteren</button>
-            </div>
+            <button class="bt-popover-button-secondary" :disabled="flags.isLoading" @click="$emit('cancel')" v-if="!flags.isSuccessful">Annuleren</button>
+            <button class="bt-popover-button-primary" :disabled="flags.isLoading" @click="onSubmit" v-if="!flags.isSuccessful">Rapporteren</button>
 
-            <div v-if="isSuccessful">
-                <button class="bt-popover-button-secondary" @click="$emit('cancel')">Sluiten</button>
-            </div>
+            <button class="bt-popover-button-secondary" @click="$emit('cancel')" v-if="flags.isSuccessful">Sluiten</button>
         </template>
     </Popover>
 </template>
 
 <script>
-import Popover from './Popover.vue'
+import Popover from './Popover'
 
 import bowser from 'bowser'
 import axios from 'axios'
@@ -44,23 +40,37 @@ import qs from 'qs'
 
 export default {
     components: { Popover },
-    props: {
-        settings: Object,
+    computed: {
+        popover: function () {
+            const selection = this.settings.selection
+
+            return {
+                isLoading: this.flags.isLoading,
+                position: {
+                    top: selection.top + selection.height + 7,
+                    left: selection.left + ((selection.width - 408) / 2),
+                },
+            }
+        },
     },
-    data: () => {
+    data: function () {
         return {
-            isSuccessful: false,
-            isLoading: false,
             fields: {
                 description: '',
                 title: '',
             },
+            flags: {
+                isSuccessful: false,
+                isLoading: false,
+            },
         }
+    },
+    props: {
+        settings: Object,
     },
     methods: {
         onSubmit: function () {
-            this.$emit('submit')
-            this.isLoading = true
+            this.flags.isLoading = true
 
             const userAgent = bowser.getParser(window.navigator.userAgent).parsedResult
             const extra = []
@@ -120,20 +130,23 @@ export default {
                 description: description + extra.join('\n'),
                 screenshot: this.settings.screenshot.replace(/^data:image\/png;base64,/, ''),
                 title: this.fields.title,
-                list: this.settings.unresolved,
 
-                height: height,
-                width: width,
-                x: this.settings.metadata.x,
-                y: this.settings.metadata.y,
+                project_id: this.settings.project,
+
+                selection_width: this.settings.selection.width,
+                selection_height: this.settings.selection.height,
+                page_height: height,
+                page_width: width,
+                dot_x: this.settings.selection.left - (30 / 2),
+                dot_y: this.settings.selection.top - (30 / 2),
             }
 
             // TODO: Extract this URL to another place.
             axios.post('http://188.166.121.197:4321/bugs', qs.stringify(data), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
                 .then((response) => {
-                    this.isSuccessful = true
+                    this.flags.isSuccessful = true
 
-                    const existingBugs = JSON.parse(window.localStorage.getItem('bugs') || '[]')
+                    /*const existingBugs = JSON.parse(window.localStorage.getItem('bugs') || '[]')
 
                     existingBugs.push({
                         title: this.fields.title,
@@ -145,13 +158,13 @@ export default {
                         y: this.settings.metadata.y,
                     })
 
-                    window.localStorage.setItem('bugs', JSON.stringify(existingBugs))
+                    window.localStorage.setItem('bugs', JSON.stringify(existingBugs))*/
                 })
                 .catch((error) => {
                     console.log(error)
                 })
                 .then(() => {
-                    this.isLoading = false
+                    this.flags.isLoading = false
                 })
         },
     },
@@ -160,6 +173,10 @@ export default {
 
 <style lang="sass" scoped>
 $font-family: "Roboto", sans-serif;
+
+* {
+    box-sizing: border-box;
+}
 
 .bt-popover {
     .bt-popover-form {

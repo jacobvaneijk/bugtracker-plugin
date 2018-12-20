@@ -1,14 +1,21 @@
 <template>
-    <div class="bt-popover-wrapper" @click="onWrapperClick">
-        <div class="bt-popover" :class="{ 'bt-has-heading': $slots.heading }" :style="{ top: y + 'px', left: x + 'px' }">
+    <div>
+        <div class="bt-popover-wrapper" @click="$emit('close')" />
+
+        <div
+            class="bt-popover"
+
+            :class="{ 'bt-is-loading': settings.isLoading, 'bt-has-heading': $slots.heading }"
+            :style="style"
+        >
             <div class="bt-popover-heading" v-if="$slots.heading">
-                <slot name="heading"></slot>
+                <slot name="heading" />
             </div>
 
-            <slot></slot>
+            <slot />
 
             <div class="bt-popover-actions" v-if="$slots.actions">
-                <slot name="actions"></slot>
+                <slot name="actions" />
             </div>
         </div>
     </div>
@@ -16,28 +23,16 @@
 
 <script>
 export default {
-    props: {
-        loading: {
-            default: false,
-            type: Boolean,
-        },
-        x: {
-            default: 0,
-            type: Number,
-        },
-        y: {
-            default: 0,
-            type: Number,
-        },
-    },
-    methods: {
-        onWrapperClick: function (event) {
-            // Only close the popover if a click is registered on the wrapper,
-            // and not on the popover itself.
-            if (event.target.classList.contains('bt-popover-wrapper')) {
-                this.$emit('closePopover')
+    computed: {
+        style: function () {
+            return {
+                top: `${this.settings.position.top}px`,
+                left: `${this.settings.position.left}px`,
             }
         },
+    },
+    props: {
+        settings: Object,
     },
 }
 </script>
@@ -53,13 +48,14 @@ $font-family: "Roboto", sans-serif;
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 9999;
+    z-index: 5000;
     width: 100%;
     height: 100%;
 }
 
 .bt-popover {
     position: absolute;
+    z-index: 5100;
     width: 408px;
     font-family: $font-family;
     background-color: #fff;
@@ -113,16 +109,13 @@ $font-family: "Roboto", sans-serif;
     }
 
     .bt-popover-actions {
+        display: flex;
         padding: 12px 16px;
         background-color: #f7f7f7;
         border-top: 1px solid #dedede;
         border-bottom-right-radius: 3px;
         border-bottom-left-radius: 3px;
-
-        > div {
-            display: flex;
-            justify-content: flex-end;
-        }
+        justify-content: flex-end;
 
         .bt-popover-button-secondary {
             position: relative;
