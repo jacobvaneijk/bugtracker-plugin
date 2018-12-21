@@ -1,17 +1,20 @@
 <template>
     <div>
         <div class="bt-bug-wrapper" :style="style.wrapper">
+            <Selection :settings="selection" v-if="flags.isOpened" />
+
             <div
                 class="bt-bug"
 
-                :class="{ 'is-active': isOpened }"
                 :style="style.bug"
 
-                @click="isOpened = !isOpened"
+                @click="flags.isOpened = true"
+
+                v-if="!flags.isOpened"
             />
         </div>
 
-        <Popover :settings="popover" @close="isOpened = false" v-if="isOpened">
+        <Popover :settings="popover" @close="flags.isOpened = false" v-if="flags.isOpened">
             <div class="bt-popover-body">
                 <h2 class="bt-popover-title">{{ settings.title }}</h2>
 
@@ -32,31 +35,46 @@
 </template>
 
 <script>
+import Selection from './Selection'
 import Popover from './Popover'
 
 export default {
-    components: { Popover },
+    components: { Selection, Popover },
     computed: {
         trelloUrl: function () {
             return `https://trello.com/c/${this.settings.id}`
         },
         popover: function () {
+            const selection = this.selection
+
             return {
                 position: {
-                    top: this.settings.top + 30 + 7,
-                    left: this.settings.left + ((30 - 408) / 2),
+                    top: selection.top + selection.height + 7,
+                    left: selection.left + ((selection.width - 408) / 2) + ((this.pageWidth - this.settings.page_width) / 2),
                 },
+            }
+        },
+        selection: function () {
+            const settings = this.settings
+
+            return {
+                maySelect: false,
+                offset: (this.pageWidth - this.settings.page_width) / 2,
+                width: settings.selection_width,
+                height: settings.selection_height,
+                top: settings.dot_y + (30 / 2),
+                left: settings.dot_x + (30 / 2),
             }
         },
         style: function () {
             return {
                 wrapper: {
-                    width: `${this.settings.width}px`,
-                    height: `${this.settings.height}px`,
+                    width: `${this.settings.page_width}px`,
+                    height: `${this.settings.page_height}px`,
                 },
                 bug: {
-                    top: `${this.settings.top}px`,
-                    left: `${this.settings.left}px`,
+                    top: `${this.settings.dot_y}px`,
+                    left: `${this.settings.dot_x}px`,
                 },
             }
         },
@@ -66,8 +84,19 @@ export default {
     },
     data: function () {
         return {
-            isOpened: false,
+            flags: {
+                isOpened: false,
+            },
+            pageWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
         }
+    },
+    created: function () {
+        window.addEventListener('resize', this.onResize)
+    },
+    methods: {
+        onResize: function () {
+            this.pageWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
+        },
     },
 }
 </script>
@@ -100,7 +129,6 @@ $font-family: "Roboto", sans-serif;
         cursor: pointer;
         transition: background-color ease-in-out .1s;
 
-        &.is-active,
         &:hover {
             background-color: lighten(#ff4c43, 25%);
         }

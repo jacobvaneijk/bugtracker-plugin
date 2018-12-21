@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div :style="style.wrapper">
         <div
             class="bt-mask"
 
@@ -35,19 +35,12 @@ export default {
         masks: function () {
             const masks = []
 
-            // Get the total document height.
-            const documentHeight = Math.max(
-                document.body.scrollHeight,
-                document.body.offsetHeight,
-                document.documentElement.clientHeight,
-                document.documentElement.scrollHeight,
-                document.documentElement.offsetHeight
-            )
-
             if (this.selection.width > 0 && this.selection.height > 0) {
+                const left = (this.settings && this.settings.offset) ? this.selection.left + this.settings.offset : this.selection.left
+
                 // Calculate the 'top' mask.
                 masks.push({
-                    width: parseInt(window.innerWidth),
+                    width: this.pageWidth,
                     height: this.selection.top + 2,
                     left: 0,
                     top: 0,
@@ -55,15 +48,15 @@ export default {
 
                 // Calculate the 'bottom' mask.
                 masks.push({
-                    width: parseInt(window.innerWidth),
-                    height: parseInt(documentHeight) - (this.selection.top + this.selection.height + 2),
+                    width: this.pageWidth,
+                    height: this.pageHeight - (this.selection.top + this.selection.height + 2),
                     left: 0,
                     top: this.selection.top + this.selection.height - 2,
                 })
 
                 // Calculate the 'left' mask.
                 masks.push({
-                    width: this.selection.left + 2,
+                    width: left + 2,
                     height: this.selection.height - 4,
                     top: this.selection.top + 2,
                     left: 0,
@@ -71,15 +64,15 @@ export default {
 
                 // Calculate the 'right' mask.
                 masks.push({
-                    width: parseInt(window.innerWidth) - (this.selection.left + this.selection.width),
+                    width: this.pageWidth - (left + this.selection.width),
                     height: this.selection.height - 4,
                     top: this.selection.top + 2,
-                    left: this.selection.left + this.selection.width,
+                    left: left + this.selection.width,
                 })
             } else {
                 // Arrange the masks so that the entire page is covered.
-                const height = documentHeight / 2
-                const width = window.innerWidth / 2
+                const height = this.pageHeight / 2
+                const width = this.pageWidth / 2
 
                 for (let i = 0; i < 4; ++i) {
                     masks.push({
@@ -98,6 +91,7 @@ export default {
         },
         style: function () {
             const masks = []
+            let wrapper = {}
 
             for (let i = 0; i < this.masks.length; ++i) {
                 masks.push({
@@ -108,12 +102,23 @@ export default {
                 })
             }
 
+            // Determine if an offset to the entire selection should be applied.
+            // This will make the selection (more) responsive.
+            if (this.settings && this.settings.offset) {
+                wrapper = {
+                    position: 'absolute',
+                    top: 0,
+                    left: `${(this.settings.offset || 0) * -1}px`,
+                }
+            }
+
             return {
+                wrapper: wrapper,
                 selection: {
                     width: `${this.selection.width}px`,
                     height: `${this.selection.height}px`,
                     top: `${this.selection.top}px`,
-                    left: `${this.selection.left}px`,
+                    left: `${this.selection.left + ((this.settings && this.settings.offset) || 0)}px`,
                 },
                 masks: masks,
             }
@@ -124,18 +129,29 @@ export default {
     },
     data: function () {
         return {
-            isSelecting: false,
+            flags: {
+                isSelecting: false,
+            },
             selection: {
                 startX: 0,
                 startY: 0,
                 width: (this.settings && this.settings.width) || 0,
                 height: (this.settings && this.settings.height) || 0,
-                left: (this.settings && this.settings.left) || 0,
+                left: ((this.settings && this.settings.left) || 0),
                 top: (this.settings && this.settings.top) || 0
             },
+            pageWidth: Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
+            pageHeight: Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight),
         }
     },
+    created: function () {
+        window.addEventListener('resize', this.onResize)
+    },
     methods: {
+        onResize: function () {
+            this.pageWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
+            this.pageHeight = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight)
+        },
         getScreenCoordinates: function (event) {
             const eventDocument = (event.target && event.target.ownerDocument) || document
             const body = eventDocument.body
@@ -150,7 +166,7 @@ export default {
         onSelectionStart: function (event) {
             // Determine if the selection is allowed.
             if (
-                this.isSelecting
+                this.flags.isSelecting
                 || !(typeof (this.settings && this.settings.maySelect) === 'undefined' ? true : this.settings.maySelect)
             ) {
                 return
@@ -166,10 +182,10 @@ export default {
             this.selection.width = this.selection.height = 0
 
             // Enable the 'selecting' flag.
-            this.isSelecting = true
+            this.flags.isSelecting = true
         },
         onSelectionMove: function (event) {
-            if (!this.isSelecting) {
+            if (!this.flags.isSelecting) {
                 return
             }
 
@@ -193,12 +209,12 @@ export default {
             this.selection.height = Math.abs(coordinates.top - this.selection.startTop)
         },
         onSelectionEnd: function () {
-            if (!this.isSelecting) {
+            if (!this.flags.isSelecting) {
                 return
             }
 
             // Disable the 'selecting' flag.
-            this.isSelecting = false
+            this.flags.isSelecting = false
 
             // Emit an event to indicate that the selection is complete.
             this.$emit('selection', {
