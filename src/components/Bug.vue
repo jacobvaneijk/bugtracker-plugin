@@ -8,13 +8,13 @@
 
                 :style="style.bug"
 
-                @click="flags.isOpened = true"
+                @click="onBugClick"
 
                 v-if="!flags.isOpened"
             />
         </div>
 
-        <Popover :settings="popover" @close="flags.isOpened = false" v-if="flags.isOpened">
+        <Popover :settings="popover" @close="onPopoverClose" v-if="flags.isOpened">
             <div class="bt-popover-body">
                 <h2 class="bt-popover-title">{{ settings.title }}</h2>
 
@@ -94,6 +94,16 @@ export default {
         window.addEventListener('resize', this.onResize)
     },
     methods: {
+        onPopoverClose: function () {
+            this.flags.isOpened = false
+
+            this.$emit('return')
+        },
+        onBugClick: function () {
+            this.flags.isOpened = true
+
+            this.$emit('view', this.settings);
+        },
         onResize: function () {
             this.pageWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
         },
