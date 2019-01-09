@@ -18,7 +18,7 @@
             <div class="bt-popover-body">
                 <h2 class="bt-popover-title">{{ settings.title }}</h2>
 
-                <p class="bt-popover-description" v-if="settings.description">{{ settings.description }}</p>
+                <p class="bt-popover-description" v-if="description">{{ description }}</p>
                 <p class="bt-popover-description bt-empty" v-else>Geen beschrijving</p>
 
                 <div class="bt-popover-status">
@@ -77,6 +77,9 @@ export default {
                     left: `${this.settings.dot_x}px`,
                 },
             }
+        },
+        description: function () {
+            return this.settings.description.substring(0, this.settings.description.indexOf('**Browser:**'))
         },
     },
     props: {

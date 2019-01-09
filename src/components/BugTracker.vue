@@ -8,6 +8,7 @@
             :settings="reportBug"
 
             @cancel="onReportBugCancel"
+            @submit="onBugReported"
 
             v-if="flags.hasSelection"
         />
@@ -20,7 +21,7 @@
                 :key="bug.title"
 
                 @view="onBugView"
-                @return="onBugReturn"
+                @return="onResize"
 
                 v-if="bug.shown"
             />
@@ -33,21 +34,34 @@
 </template>
 
 <script>
-import html2canvas from 'html2canvas'
-
 import EntryPoint from './EntryPoint'
 import ReportBug from './ReportBug'
 import Selection from './Selection'
 import Bug from './Bug'
 
+import html2canvas from 'html2canvas'
+import axios from 'axios'
+
+const MOBILE_WIDTH = 768
+
 export default {
     components: { EntryPoint, ReportBug, Selection, Bug },
     created: function () {
-        this.bugs = JSON.parse(window.localStorage.getItem('bugs') || '[]')
+        window.addEventListener('resize', this.onResize)
 
-        this.bugs.forEach((bug) => {
-            bug.shown = true
-        })
+        const pageWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
+
+        axios.get(`/bugs?project=${this.project}`)
+            .then((response) => {
+                response.data.forEach((bug) => {
+                    bug.shown = !((bug.page_width > MOBILE_WIDTH && pageWidth < MOBILE_WIDTH) || (bug.page_width < MOBILE_WIDTH && pageWidth > MOBILE_WIDTH))
+                })
+
+                this.bugs = response.data
+            })
+            .catch((error) => {
+                console.log(error)
+            })
     },
     data: function () {
         return {
@@ -70,16 +84,14 @@ export default {
             this.flags.hasSelection = false
             this.flags.isOpened = false
         },
+        onBugReported: function (bug) {
+            bug.shown = true
+
+            this.bugs.push(bug)
+        },
         onEntryPointClick: function () {
             this.flags.hasSelection = false
             this.flags.isOpened = !this.flags.isOpened
-        },
-        onBugReturn: function () {
-            this.bugs.forEach((bug) => {
-                bug.shown = true
-            })
-
-            this.$forceUpdate()
         },
         onBugView: function (settings) {
             this.bugs.forEach((bug) => {
@@ -113,6 +125,15 @@ export default {
             })
 
             this.flags.hasSelection = true
+        },
+        onResize: function () {
+            const pageWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
+
+            this.bugs.forEach((bug) => {
+                bug.shown = !((bug.page_width > MOBILE_WIDTH && pageWidth < MOBILE_WIDTH) || (bug.page_width < MOBILE_WIDTH && pageWidth > MOBILE_WIDTH))
+            })
+
+            this.$forceUpdate()
         },
     },
 }

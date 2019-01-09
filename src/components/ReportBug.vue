@@ -135,8 +135,8 @@ export default {
 
                 selection_width: this.settings.selection.width,
                 selection_height: this.settings.selection.height,
-                page_height: height,
                 page_width: width,
+                page_height: height,
                 dot_x: this.settings.selection.left - (30 / 2),
                 dot_y: this.settings.selection.top - (30 / 2),
             }
@@ -144,6 +144,18 @@ export default {
             axios.post('bugs', qs.stringify(data))
                 .then((response) => {
                     this.flags.isSuccessful = true
+
+                    this.$emit('submit', {
+                        title: this.fields.title,
+                        description: this.fields.description,
+                        selection_width: this.settings.selection.width,
+                        selection_height: this.settings.selection.height,
+                        page_width: width,
+                        page_height: height,
+                        id: response.data.id,
+                        dot_x: data.dot_x,
+                        dot_y: data.dot_y,
+                    })
                 })
                 .catch((error) => {
                     console.log(error)
