@@ -50,8 +50,9 @@ export default {
         window.addEventListener('resize', this.onResize)
 
         const pageWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0)
+        const url = new URL(window.location.href)
 
-        axios.get(`/bugs?project=${this.project}`)
+        axios.get(`/bugs?project=${this.project}&path=${url.pathname}`)
             .then((response) => {
                 response.data.forEach((bug) => {
                     bug.shown = !((bug.page_width > MOBILE_WIDTH && pageWidth < MOBILE_WIDTH) || (bug.page_width < MOBILE_WIDTH && pageWidth > MOBILE_WIDTH))

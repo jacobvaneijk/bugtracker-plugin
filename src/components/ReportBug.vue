@@ -120,7 +120,10 @@ export default {
                 extra.push(operatingSystem)
             }
 
+            const url = new URL(window.location.href)
+
             extra.push(`**Browser size:** ${width}x${height}px`)
+            extra.push(`**Page:** ${url.pathname}`)
 
             if (description.length > 0 && extra.length > 0) {
                 description += '\n\n'
@@ -130,6 +133,7 @@ export default {
                 description: description + extra.join('\n'),
                 screenshot: this.settings.screenshot.replace(/^data:image\/png;base64,/, ''),
                 title: this.fields.title,
+                path: url.pathname,
 
                 project_id: this.settings.project,
 

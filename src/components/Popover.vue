@@ -135,6 +135,10 @@ $font-family: "Roboto", sans-serif;
             cursor: pointer;
             transition: color ease-in-out .1s, opacity ease-in-out .1s;
 
+            & + .bt-popover-button-secondary {
+                margin-left: 16px;
+            }
+
             &::after {
                 position: absolute;
                 bottom: 6px;

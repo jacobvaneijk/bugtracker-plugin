@@ -28,6 +28,7 @@
             </div>
 
             <template slot="actions">
+                <button class="bt-popover-button-secondary" @click="onPopoverClose">Sluiten</button>
                 <a class="bt-popover-button-secondary" :href="trelloUrl" target="_blank">Bekijk voortgang</a>
             </template>
         </Popover>
