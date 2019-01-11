@@ -23,7 +23,7 @@
 
                 <div class="bt-popover-status">
                     <span class="bt-popover-label">Status</span>
-                    <span class="bt-popover-value">In behandeling</span>
+                    <span class="bt-popover-value">{{ settings.status || 'Unresolved' }}</span>
                 </div>
             </div>
 
